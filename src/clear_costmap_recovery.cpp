@@ -44,8 +44,8 @@ PLUGINLIB_DECLARE_CLASS(clear_costmap_recovery, ClearCostmapRecovery, clear_cost
 using costmap_2d::NO_INFORMATION;
 
 namespace clear_costmap_recovery {
-ClearCostmapRecovery::ClearCostmapRecovery(): global_costmap_(NULL), local_costmap_(NULL), 
-  tf_(NULL), initialized_(false) {} 
+ClearCostmapRecovery::ClearCostmapRecovery(): global_costmap_(NULL), local_costmap_(NULL),
+  tf_(NULL), initialized_(false) {}
 
 void ClearCostmapRecovery::initialize(std::string name, tf::TransformListener* tf,
     costmap_2d::Costmap2DROS* global_costmap, costmap_2d::Costmap2DROS* local_costmap){
@@ -59,16 +59,15 @@ void ClearCostmapRecovery::initialize(std::string name, tf::TransformListener* t
     ros::NodeHandle private_nh("~/" + name_);
 
     private_nh.param("reset_distance", reset_distance_, 3.0);
-    
+
     std::vector<std::string> clearable_layers_default, clearable_layers;
     clearable_layers_default.push_back( std::string("obstacles") );
-    private_nh.param("layer_names", clearable_layers, clearable_layers_default);
+    private_nh.param("/move_base/layer_names", clearable_layers, clearable_layers_default);
 
     for(unsigned i=0; i < clearable_layers.size(); i++) {
         ROS_INFO("Recovery behavior will clear layer %s", clearable_layers[i].c_str());
         clearable_layers_.insert(clearable_layers[i]);
     }
-
 
     initialized_ = true;
   }
@@ -94,7 +93,6 @@ void ClearCostmapRecovery::runBehavior(){
 
 void ClearCostmapRecovery::clear(costmap_2d::Costmap2DROS* costmap){
   std::vector<boost::shared_ptr<costmap_2d::Layer> >* plugins = costmap->getLayeredCostmap()->getPlugins();
-
   tf::Stamped<tf::Pose> pose;
 
   if(!costmap->getRobotPose(pose)){
@@ -112,7 +110,6 @@ void ClearCostmapRecovery::clear(costmap_2d::Costmap2DROS* costmap){
     if( slash != std::string::npos ){
         name = name.substr(slash+1);
     }
-
     if(clearable_layers_.count(name)!=0){
       boost::shared_ptr<costmap_2d::CostmapLayer> costmap;
       costmap = boost::static_pointer_cast<costmap_2d::CostmapLayer>(plugin);
@@ -122,10 +119,10 @@ void ClearCostmapRecovery::clear(costmap_2d::Costmap2DROS* costmap){
 }
 
 
-void ClearCostmapRecovery::clearMap(boost::shared_ptr<costmap_2d::CostmapLayer> costmap, 
+void ClearCostmapRecovery::clearMap(boost::shared_ptr<costmap_2d::CostmapLayer> costmap,
                                         double pose_x, double pose_y){
   boost::unique_lock<costmap_2d::Costmap2D::mutex_t> lock(*(costmap->getMutex()));
- 
+
   double start_point_x = pose_x - reset_distance_ / 2;
   double start_point_y = pose_y - reset_distance_ / 2;
   double end_point_x = start_point_x + reset_distance_;
@@ -138,7 +135,7 @@ void ClearCostmapRecovery::clearMap(boost::shared_ptr<costmap_2d::CostmapLayer> 
   unsigned char* grid = costmap->getCharMap();
   for(int x=0; x<(int)costmap->getSizeInCellsX(); x++){
     bool xrange = x>start_x && x<end_x;
-                   
+
     for(int y=0; y<(int)costmap->getSizeInCellsY(); y++){
       if(xrange && y>start_y && y<end_y)
         continue;
