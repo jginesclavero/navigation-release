@@ -268,10 +268,10 @@ namespace base_local_planner {
         y_vels.push_back(0.3);
       }
     }else{
-      y_vels.push_back(0.0);
-      y_vels.push_back(0.0);
-      y_vels.push_back(0.0);
-      y_vels.push_back(0.0);
+      y_vels.push_back(-0.3);
+      y_vels.push_back(-0.1);
+      y_vels.push_back(0.1);
+      y_vels.push_back(0.3);
     }
 
     return y_vels;
