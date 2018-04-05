@@ -247,10 +247,8 @@ namespace base_local_planner {
 
   std::vector<double> TrajectoryPlannerROS::loadYVels(ros::NodeHandle node){
     std::vector<double> y_vels;
-    bool h_robot;
     std::string y_vel_list;
-    node.param("holonomic_robot",h_robot,true);
-    if(h_robot){
+    if(acc_lim_y_ != 0){
       if(node.getParam("y_vels", y_vel_list)){
         typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
         boost::char_separator<char> sep("[], ");
@@ -268,10 +266,10 @@ namespace base_local_planner {
         y_vels.push_back(0.3);
       }
     }else{
-      y_vels.push_back(-0.3);
-      y_vels.push_back(-0.1);
-      y_vels.push_back(0.1);
-      y_vels.push_back(0.3);
+      y_vels.push_back(0.0);
+      y_vels.push_back(0.0);
+      y_vels.push_back(0.0);
+      y_vels.push_back(0.0);
     }
 
     return y_vels;
