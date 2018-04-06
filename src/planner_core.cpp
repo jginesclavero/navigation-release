@@ -68,11 +68,11 @@ void GlobalPlanner::outlineMap(unsigned char* costarr, int nx, int ny, unsigned 
 }
 
 GlobalPlanner::GlobalPlanner() :
-        costmap_(NULL), initialized_(false), allow_unknown_(true) {
+        costmap_(NULL), costmap_static_(NULL), initialized_(false), allow_unknown_(true) {
 }
 
 GlobalPlanner::GlobalPlanner(std::string name, costmap_2d::Costmap2D* costmap, std::string frame_id) :
-        costmap_(NULL), initialized_(false), allow_unknown_(true) {
+        costmap_(NULL), costmap_static_(NULL), initialized_(false), allow_unknown_(true) {
     //initialize the planner
     initialize(name, costmap, frame_id);
 }
@@ -96,6 +96,7 @@ void GlobalPlanner::initialize(std::string name, costmap_2d::Costmap2D* costmap,
     if (!initialized_) {
         ros::NodeHandle private_nh("~/" + name);
         costmap_ = costmap;
+        *costmap_static_ = *costmap;
         frame_id_ = frame_id;
 
         unsigned int cx = costmap->getSizeInCellsX(), cy = costmap->getSizeInCellsY();
@@ -131,7 +132,7 @@ void GlobalPlanner::initialize(std::string name, costmap_2d::Costmap2D* costmap,
             path_maker_ = new GridPath(p_calc_);
         else
             path_maker_ = new GradientPath(p_calc_);
-            
+
         orientation_filter_ = new OrientationFilter();
 
         plan_pub_ = private_nh.advertise<nav_msgs::Path>("plan", 1);
@@ -216,11 +217,19 @@ bool GlobalPlanner::worldToMap(double wx, double wy, double& mx, double& my) {
 
 bool GlobalPlanner::makePlan(const geometry_msgs::PoseStamped& start, const geometry_msgs::PoseStamped& goal,
                            std::vector<geometry_msgs::PoseStamped>& plan) {
-    return makePlan(start, goal, default_tolerance_, plan);
+    return makePlan(start, goal, default_tolerance_, plan,costmap_);
 }
 
 bool GlobalPlanner::makePlan(const geometry_msgs::PoseStamped& start, const geometry_msgs::PoseStamped& goal,
-                           double tolerance, std::vector<geometry_msgs::PoseStamped>& plan) {
+                           std::vector<geometry_msgs::PoseStamped>& plan, bool static_map) {
+    if(static_map)
+      return makePlan(start, goal, default_tolerance_, plan,costmap_static_);
+
+    return false;
+}
+
+bool GlobalPlanner::makePlan(const geometry_msgs::PoseStamped& start, const geometry_msgs::PoseStamped& goal,
+                           double tolerance, std::vector<geometry_msgs::PoseStamped>& plan,costmap_2d::Costmap2D* costmap_) {
     boost::mutex::scoped_lock lock(mutex_);
     if (!initialized_) {
         ROS_ERROR(
@@ -319,7 +328,7 @@ bool GlobalPlanner::makePlan(const geometry_msgs::PoseStamped& start, const geom
 
     // add orientations if needed
     orientation_filter_->processPath(start, plan);
-    
+
     //publish the plan for visualization purposes
     publishPlan(plan);
     delete potential_array_;
@@ -436,4 +445,3 @@ void GlobalPlanner::publishPotential(float* potential)
 }
 
 } //end namespace global_planner
-

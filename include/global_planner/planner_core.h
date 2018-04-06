@@ -98,6 +98,18 @@ class GlobalPlanner : public nav_core::BaseGlobalPlanner {
          * @param start The start pose
          * @param goal The goal pose
          * @param plan The plan... filled by the planner
+         * @param static_map Use a static_map to plan
+         * @return True if a valid plan was found, false otherwise
+         */
+        bool makePlan(const geometry_msgs::PoseStamped& start, const geometry_msgs::PoseStamped& goal,
+                      std::vector<geometry_msgs::PoseStamped>& plan, bool static_map);
+
+
+        /**
+         * @brief Given a goal pose in the world, compute a plan
+         * @param start The start pose
+         * @param goal The goal pose
+         * @param plan The plan... filled by the planner
          * @return True if a valid plan was found, false otherwise
          */
         bool makePlan(const geometry_msgs::PoseStamped& start, const geometry_msgs::PoseStamped& goal,
@@ -112,7 +124,7 @@ class GlobalPlanner : public nav_core::BaseGlobalPlanner {
          * @return True if a valid plan was found, false otherwise
          */
         bool makePlan(const geometry_msgs::PoseStamped& start, const geometry_msgs::PoseStamped& goal, double tolerance,
-                      std::vector<geometry_msgs::PoseStamped>& plan);
+                      std::vector<geometry_msgs::PoseStamped>& plan,costmap_2d::Costmap2D* costmap_);
 
         /**
          * @brief  Computes the full navigation function for the map given a point in the world to start from
@@ -170,6 +182,7 @@ class GlobalPlanner : public nav_core::BaseGlobalPlanner {
          * @brief Store a copy of the current costmap in \a costmap.  Called by makePlan.
          */
         costmap_2d::Costmap2D* costmap_;
+        costmap_2d::Costmap2D* costmap_static_;
         std::string frame_id_;
         ros::Publisher plan_pub_;
         bool initialized_, allow_unknown_, visualize_potential_;
