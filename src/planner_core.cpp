@@ -96,7 +96,9 @@ void GlobalPlanner::initialize(std::string name, costmap_2d::Costmap2D* costmap,
     if (!initialized_) {
         ros::NodeHandle private_nh("~/" + name);
         costmap_ = costmap;
+        costmap_static_ = new costmap_2d::Costmap2D();
         *costmap_static_ = *costmap;
+
         frame_id_ = frame_id;
 
         unsigned int cx = costmap->getSizeInCellsX(), cy = costmap->getSizeInCellsY();
