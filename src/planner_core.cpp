@@ -155,6 +155,7 @@ void GlobalPlanner::initialize(std::string name, costmap_2d::Costmap2D* costmap,
         tf_prefix_ = tf::getPrefixParam(prefix_nh);
 
         make_plan_srv_ = private_nh.advertiseService("make_plan", &GlobalPlanner::makePlanService, this);
+        make_plan_static_srv_ = private_nh.advertiseService("make_plan_static_map", &GlobalPlanner::makePlanStaticService, this);
 
         dsrv_ = new dynamic_reconfigure::Server<global_planner::GlobalPlannerConfig>(ros::NodeHandle("~/" + name));
         dynamic_reconfigure::Server<global_planner::GlobalPlannerConfig>::CallbackType cb = boost::bind(
@@ -195,6 +196,16 @@ bool GlobalPlanner::makePlanService(nav_msgs::GetPlan::Request& req, nav_msgs::G
 
     return true;
 }
+
+bool GlobalPlanner::makePlanStaticService(nav_msgs::GetPlan::Request& req, nav_msgs::GetPlan::Response& resp) {
+    makePlan(req.start, req.goal, resp.plan.poses, true);
+
+    resp.plan.header.stamp = ros::Time::now();
+    resp.plan.header.frame_id = frame_id_;
+
+    return true;
+}
+
 
 void GlobalPlanner::mapToWorld(double mx, double my, double& wx, double& wy) {
     wx = costmap_->getOriginX() + (mx+convert_offset_) * costmap_->getResolution();

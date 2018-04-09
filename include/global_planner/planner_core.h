@@ -175,6 +175,8 @@ class GlobalPlanner : public nav_core::BaseGlobalPlanner {
         void publishPlan(const std::vector<geometry_msgs::PoseStamped>& path);
 
         bool makePlanService(nav_msgs::GetPlan::Request& req, nav_msgs::GetPlan::Response& resp);
+        bool makePlanStaticService(nav_msgs::GetPlan::Request& req, nav_msgs::GetPlan::Response& resp);
+
 
     protected:
 
@@ -196,7 +198,7 @@ class GlobalPlanner : public nav_core::BaseGlobalPlanner {
         double planner_window_x_, planner_window_y_, default_tolerance_;
         std::string tf_prefix_;
         boost::mutex mutex_;
-        ros::ServiceServer make_plan_srv_;
+        ros::ServiceServer make_plan_srv_,make_plan_static_srv_;
 
         PotentialCalculator* p_calc_;
         Expander* planner_;
