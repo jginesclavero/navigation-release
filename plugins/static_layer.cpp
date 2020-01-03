@@ -199,7 +199,6 @@ void StaticLayer::incomingMap(const nav_msgs::OccupancyGridConstPtr& new_map)
   }
 
   unsigned int index = 0;
-  ROS_ERROR("StaticLayer::incomingMap");
   // initialize the costmap with static data
   for (unsigned int i = 0; i < size_y; ++i)
   {
