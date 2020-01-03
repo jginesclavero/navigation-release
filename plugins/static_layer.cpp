@@ -74,13 +74,15 @@ void StaticLayer::onInitialize()
   nh.param("track_unknown_space", track_unknown_space_, true);
   nh.param("use_maximum", use_maximum_, false);
 
-  int temp_lethal_threshold, temp_unknown_cost_value;
+  int temp_lethal_threshold, temp_unknown_cost_value, temp_free_cost_value;
   nh.param("lethal_cost_threshold", temp_lethal_threshold, int(100));
   nh.param("unknown_cost_value", temp_unknown_cost_value, int(-1));
+  nh.param("free_cost_value", temp_free_cost_value, int(0));
   nh.param("trinary_costmap", trinary_costmap_, true);
 
   lethal_threshold_ = std::max(std::min(temp_lethal_threshold, 100), 0);
   unknown_cost_value_ = temp_unknown_cost_value;
+  free_cost_value_ = temp_free_cost_value;
 
   // Only resubscribe if topic has changed
   if (map_sub_.getTopic() != ros::names::resolve(map_topic))
@@ -117,17 +119,18 @@ void StaticLayer::onInitialize()
     delete dsrv_;
   }
 
-  dsrv_ = new dynamic_reconfigure::Server<costmap_2d::GenericPluginConfig>(nh);
-  dynamic_reconfigure::Server<costmap_2d::GenericPluginConfig>::CallbackType cb = boost::bind(
+  dsrv_ = new dynamic_reconfigure::Server<costmap_2d::StaticPluginConfig>(nh);
+  dynamic_reconfigure::Server<costmap_2d::StaticPluginConfig>::CallbackType cb = boost::bind(
       &StaticLayer::reconfigureCB, this, _1, _2);
   dsrv_->setCallback(cb);
 }
 
-void StaticLayer::reconfigureCB(costmap_2d::GenericPluginConfig &config, uint32_t level)
+void StaticLayer::reconfigureCB(costmap_2d::StaticPluginConfig &config, uint32_t level)
 {
   if (config.enabled != enabled_)
   {
     enabled_ = config.enabled;
+    free_cost_value_ = config.free_cost_value;
     has_updated_data_ = true;
     x_ = y_ = 0;
     width_ = size_x_;
@@ -196,14 +199,17 @@ void StaticLayer::incomingMap(const nav_msgs::OccupancyGridConstPtr& new_map)
   }
 
   unsigned int index = 0;
-
+  ROS_ERROR("StaticLayer::incomingMap");
   // initialize the costmap with static data
   for (unsigned int i = 0; i < size_y; ++i)
   {
     for (unsigned int j = 0; j < size_x; ++j)
     {
       unsigned char value = new_map->data[index];
-      costmap_[index] = interpretValue(value);
+      if (interpretValue(value) < free_cost_value_)
+        costmap_[index] = free_cost_value_;
+      else 
+        costmap_[index] = interpretValue(value);
       ++index;
     }
   }
